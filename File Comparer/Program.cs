@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -11,6 +12,23 @@ namespace FileComparer
     class Program
     {
         static void Main()
+        {
+            
+        }
+
+
+        
+    }
+
+    class FileComparer
+    {
+        private readonly DbContext context;
+        public FileComparer(DbContext context)
+        {
+            this.context = context;
+        }
+
+        public void Execute()
         {
             Stopwatch stopwatch     = new Stopwatch();
             Stopwatch taskStopwatch = new Stopwatch();
@@ -37,7 +55,7 @@ namespace FileComparer
 
             foreach (var checksum in firstDirectoryChecksums)
             {
-                Console.WriteLine($"{checksum.filePath} -> {checksum.checksum}");
+                Console.WriteLine($"{checksum.filePath} -> {checksum.checksumString}");
             }
 
             var fileComparisons = CompareFiles(firstDirectoryChecksums, secondDirectoryChecksums);
@@ -49,14 +67,14 @@ namespace FileComparer
             Console.ReadLine();
         }
 
-
         static List<FileComparison> CompareFiles(List<FileChecksum> firstList, List<FileChecksum> secondList)
         {
             List<FileComparison> fileComparisons = new List<FileComparison>();
 
             // First, iterate through first list
-            foreach (FileChecksum firstFile in firstList)
+            while (firstList.Count > 0)
             {
+                FileChecksum firstFile = firstList.First();
                 FileChecksum? secondFile = secondList.Where(x => x.filePath == firstFile.filePath).FirstOrDefault();
 
                 if (secondFile is null)
@@ -94,6 +112,8 @@ namespace FileComparer
 #pragma warning restore CA5351 // Do Not Use Broken Cryptographic Algorithms
             foreach (string file in files)
             {
+                Console.WriteLine(file);
+
                 using FileStream stream = File.OpenRead(file);
                 checksums.Add(new FileChecksum(file, md5.ComputeHash(stream)));
             }
@@ -120,9 +140,9 @@ namespace FileComparer
         {
             TimeSpan elapsedTime = TimeSpan.FromMilliseconds(stopwatch.ElapsedMilliseconds);
 
-            string hours = elapsedTime.Hours >= 10 ? $"{elapsedTime.Hours}" : $"0{elapsedTime.Hours}";
-            string minutes = elapsedTime.Minutes >= 10 ? $"{elapsedTime.Minutes}" : $"0{elapsedTime.Minutes}";
-            string seconds = elapsedTime.Seconds >= 10 ? $"{elapsedTime.Seconds}" : $"0{elapsedTime.Seconds}";
+            string hours    = elapsedTime.Hours     >= 10 ? $"{elapsedTime.Hours}"      : $"0{elapsedTime.Hours}";
+            string minutes  = elapsedTime.Minutes   >= 10 ? $"{elapsedTime.Minutes}"    : $"0{elapsedTime.Minutes}";
+            string seconds  = elapsedTime.Seconds   >= 10 ? $"{elapsedTime.Seconds}"    : $"0{elapsedTime.Seconds}";
 
             CustomConsole.WriteLineWithBreak($"{message} - elapsed time: {hours}:{minutes}:{seconds}");
         }
